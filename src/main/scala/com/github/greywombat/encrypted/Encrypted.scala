@@ -79,6 +79,14 @@ sealed trait Encrypted[+A] {
     * @return A new Encrypted, with the result of f.
     */
   def map[B](f: (A) => B): Encrypted[B] = new AppendedMap(this, f)
+
+  def canEqual(a: Any) = a.isInstanceOf[Encrypted[A]]
+
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: Encrypted[A] => that.canEqual(this) && this.hashCode == that.hashCode
+      case _ => false
+    }
 }
 
 object Encrypted {

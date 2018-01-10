@@ -67,4 +67,35 @@ class EncryptedSpec extends PropSpec with TableDrivenPropertyChecks with Matcher
       encrypted.map(_.substring(1) + "extra").get should be(Some(payload.substring(1) + "extra"))
     }
   }
+
+  property("should have flatMap obeying left identity law") {
+    def testFun(n: Int) = Encrypted(n * 2)
+
+    // identity of content
+    Encrypted(10).flatMap(testFun).get shouldEqual testFun(10).get
+    // identity of access rights
+    keys.keySet.filter(Encrypted(10).flatMap(testFun).allowed(_)) shouldEqual keys.keySet.filter(testFun(10).allowed(_))
+  }
+
+  property("should have flatMap obeying right identity law") {
+    forAll(dataset) { (_, m) =>
+      // identity of content
+      m.flatMap(Encrypted.apply[String]).get shouldEqual m.get
+      // identity of access rights
+      keys.keySet.filter(m.flatMap(Encrypted.apply[String]).allowed(_)) shouldEqual keys.keySet.filter(m.allowed(_))
+    }
+  }
+
+  property("should have associative flatMap function") {
+    def f(str: String) = Encrypted[String](str.reverse)
+
+    def g(str: String) = Encrypted[Int](str.length)
+
+    forAll(dataset) { (_, m) =>
+      // associativity for content
+      m.flatMap(f).flatMap(g).get shouldEqual m.flatMap(x => f(x).flatMap(g)).get
+      // associativity for access rights
+      keys.keySet.filter(m.flatMap(f).flatMap(g).allowed(_)) shouldEqual keys.keySet.filter(m.flatMap(x => f(x).flatMap(g)).allowed(_))
+    }
+  }
 }
