@@ -10,5 +10,6 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 
 before_install:
+  - sudo add-apt-repository ppa:chris-lea/libsodium -y
   - sudo apt-get -qq update
   - sudo apt-get install -y libsodium-dev
